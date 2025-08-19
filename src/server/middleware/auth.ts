@@ -1,4 +1,3 @@
-// server/middleware/auth.ts
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
@@ -14,9 +13,9 @@ export async function verifyAuth(req: Request, roles: string[] = []) {
     role: string;
   };
 
-  if (roles.length > 0 && !roles.includes(decoded.role)) {
+  if (roles.length && !roles.includes(decoded.role)) {
     throw NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  return decoded; // ✅ always plain object here
+  return decoded; // ✅ always safe, never returns NextResponse
 }

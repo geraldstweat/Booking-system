@@ -5,12 +5,14 @@ import User from "../../../../server/models/User";
 import { connectDB } from "../../../lib/mongodb";
 import { verifyAuth } from "../../../../server/middleware/auth";
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<Response> {
   try {
     await connectDB();
     const decoded = await verifyAuth(req, ["admin"]);
 
-    if ("status" in decoded) return decoded;
+    if ("status" in decoded) {
+      return NextResponse.json(decoded, { status: decoded.status });
+    }
     const reqdata = await req.json();
     const resourceId = reqdata.resourceId;
     const start_time = reqdata.start_time;
