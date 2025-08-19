@@ -2,18 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../lib/mongodb";
 import Booking from "../../../../server/models/Booking";
 
-export async function PUT(
-  req: NextRequest,
-  context: { params: { id: string } }  // ✅ correct
-) {
-  await connectDB();
-  const { status } = await req.json();
+// Custom type for reuse
+type RouteParams = { params: { id: string } };
 
-  const booking = await Booking.findByIdAndUpdate(
-    context.params.id, // ✅ access via context
-    { status },
-    { new: true }
-  );
+export async function PUT(req: NextRequest, context: unknown) {
+  await connectDB();
+  const { id } = (context as RouteParams).params; // cast here
+
+  const { status } = await req.json();
+  const booking = await Booking.findByIdAndUpdate(id, { status }, { new: true });
 
   if (!booking) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
@@ -22,19 +19,14 @@ export async function PUT(
   return NextResponse.json(booking);
 }
 
-export async function DELETE(
-  req: NextRequest,
-  context: { params: { id: string } } // ✅ not Promise
-) {
-  const { id } = context.params;
+export async function DELETE(req: NextRequest, context: unknown) {
+  const { id } = (context as RouteParams).params;
 
   try {
     const booking = await Booking.findByIdAndDelete(id);
-
     if (!booking) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
-
     return NextResponse.json({ message: "Booking deleted successfully" });
   } catch (error) {
     return NextResponse.json(
@@ -44,21 +36,15 @@ export async function DELETE(
   }
 }
 
-export async function PATCH(
-  req: NextRequest,
-  context: { params: { id: string } }  // ✅ same fix
-) {
+export async function PATCH(req: NextRequest, context: unknown) {
+  const { id } = (context as RouteParams).params;
   const { action } = await req.json(); // { action: "approve" | "reject" }
 
   let status = "pending";
   if (action === "approve") status = "confirmed";
   if (action === "reject") status = "canceled";
 
-  const booking = await Booking.findByIdAndUpdate(
-    context.params.id,
-    { status },
-    { new: true }
-  );
+  const booking = await Booking.findByIdAndUpdate(id, { status }, { new: true });
 
   if (!booking) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
