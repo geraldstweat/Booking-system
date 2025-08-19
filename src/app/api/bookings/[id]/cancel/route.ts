@@ -1,23 +1,14 @@
-import { NextResponse } from "next/server";
-import { connectDB } from "../../../../lib/mongodb";
-import Booking from "../../../../../server/models/Booking";
-import { verifyAuth } from "../../../../../server/middleware/auth";
-
-// 👇 Explicit type for context
-type Context = {
-  params: { id: string };
-};
-
 export async function PATCH(
   req: Request,
-  { params }: Context
+  context: any // 👈 FIX: let Next.js handle the shape
 ): Promise<Response> {
   await connectDB();
 
   const [auth, errorResponse] = await verifyAuth(req, ["customer", "admin"]);
   if (errorResponse) return errorResponse;
 
-  const { id } = params; // ✅ now strongly typed
+  // ✅ safely cast
+  const { id } = context.params as { id: string };
 
   const booking = await Booking.findById(id).populate("resource");
   if (!booking) {
@@ -28,7 +19,7 @@ export async function PATCH(
 
   if (auth.role === "customer") {
     const cutoff = new Date(
-      booking.start_time.getTime() - 2 * 60 * 60 * 1000 // 2h before start
+      booking.start_time.getTime() - 2 * 60 * 60 * 1000
     );
     if (now > cutoff) {
       return NextResponse.json(
