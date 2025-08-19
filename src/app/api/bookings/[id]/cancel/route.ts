@@ -1,19 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../lib/mongodb";
 import Booking from "../../../../../server/models/Booking";
 import { verifyAuth } from "../../../../../server/middleware/auth";
 
 export async function PATCH(
-  req: Request,
-  context: any // 👈 FIX: let Next.js handle the shape
-): Promise<Response> {
+  req: NextRequest,
+  { params }: any // 👈 FIX: let Next.js handle the shape
+ ) {
   await connectDB();
 
   const [auth, errorResponse] = await verifyAuth(req, ["customer", "admin"]);
   if (errorResponse) return errorResponse;
 
   // ✅ safely cast
-  const { id } = context.params as { id: string };
+  const { id } = params as { id: string };
 
   const booking = await Booking.findById(id).populate("resource");
   if (!booking) {
