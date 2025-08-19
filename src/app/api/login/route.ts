@@ -1,22 +1,9 @@
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import User from "../../../server/models/User";
-import { connectDB } from "../../lib/mongodb";
+import User from "../../../../server/models/User";
+import { connectDB } from "../../../lib/mongodb";
+import { generateToken } from "../../../lib/jwt";  // ✅ import helper
 
-// ✅ Utility to generate JWT
-export const generateToken = (userId: string, role: string) => {
-  if (!process.env.JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined in .env.local");
-  }
-  return jwt.sign(
-    { id: userId, role }, // payload
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
-  );
-};
-
-// ✅ Login route
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
@@ -43,16 +30,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Generate JWT
+    // ✅ Generate JWT using utility
     const token = generateToken(user._id.toString(), user.role);
 
-    // ✅ Don’t return password
     const data = {
       id: user._id,
       email: user.email,
       role: user.role,
       token,
-    }; 
+    };
+
     return NextResponse.json(
       { message: "Login successful", data },
       { status: 200 }
