@@ -5,14 +5,14 @@ import { verifyAuth } from "../../../../../server/middleware/auth";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Record<string, string | string[]> }
 ): Promise<Response> {
   await connectDB();
 
-  const [auth, errorResponse] = await verifyAuth(req as any, ["customer", "admin"]);
+  const [auth, errorResponse] = await verifyAuth(req, ["customer", "admin"]);
   if (errorResponse) return errorResponse;
 
-  const { id } = params;
+  const id = context.params.id as string; // ✅ safely cast to string
 
   const booking = await Booking.findById(id).populate("resource");
   if (!booking) {
@@ -22,7 +22,9 @@ export async function PATCH(
   const now = new Date();
 
   if (auth.role === "customer") {
-    const cutoff = new Date(booking.start_time.getTime() - 2 * 60 * 60 * 1000); // 2h before start
+    const cutoff = new Date(
+      booking.start_time.getTime() - 2 * 60 * 60 * 1000 // 2h before start
+    );
     if (now > cutoff) {
       return NextResponse.json(
         { message: "Too late to cancel this booking" },
@@ -31,7 +33,7 @@ export async function PATCH(
     }
   }
 
-  // optional: actually mark it canceled before saving
+  // optional: update booking status
   // booking.status = "canceled";
 
   await booking.save();
