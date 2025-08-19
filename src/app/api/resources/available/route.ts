@@ -1,0 +1,36 @@
+import { NextResponse } from "next/server";
+import Resource from "../../../../server/models/Resource";
+import { connectDB } from "../../../lib/mongodb";
+import { verifyAuth } from "@/server/middleware/auth";
+
+export async function GET(req: Request) {
+  await connectDB();
+
+  const auth = await verifyAuth(req, ["customer", "admin"]);
+  if ("status" in auth) return auth;
+
+  try {
+    let resources = await Resource.find();
+
+    // If no resources, seed defaults
+    if (resources.length === 0) {
+      const defaultResources = [
+        { name: "Conference Room A", type: "room", capacity: 20, slots: [] },
+        { name: "Conference Room B", type: "room", capacity: 10, slots: [] },
+        { name: "Private Office", type: "room", capacity: 5, slots: [] },
+        { name: "Projector Service", type: "service", duration: 60, slots: [] },
+        { name: "Catering Service", type: "service", duration: 120, slots: [] },
+      ];
+
+      resources = await Resource.insertMany(defaultResources);
+    }
+
+    return NextResponse.json(resources, { status: 200 });
+  } catch (err: any) {
+    console.error("Error fetching resources:", err);
+    return NextResponse.json(
+      { message: "Failed to fetch resources", error: err.message },
+      { status: 500 }
+    );
+  }
+}
