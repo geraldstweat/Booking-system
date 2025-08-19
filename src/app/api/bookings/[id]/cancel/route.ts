@@ -3,7 +3,7 @@ import { connectDB } from "../../../../lib/mongodb";
 import Booking from "../../../../../server/models/Booking";
 import { verifyAuth } from "../../../../../server/middleware/auth";
 
-export async function PATCH(req: NextRequest, context: any) {
+export async function PATCH(req: NextRequest, context: unknown) {
   await connectDB();
   const auth = await verifyAuth(req, ["customer", "admin"]);
 
@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest, context: any) {
     );
   }
 
-  // ✅ cast context to add type-safety
+  // ✅ safely cast context
   const { id } = (context as { params: { id: string } }).params;
 
   const booking = await Booking.findById(id).populate("resource");
