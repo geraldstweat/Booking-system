@@ -5,14 +5,17 @@ import { verifyAuth } from "../../../../../server/middleware/auth";
 
 export async function PATCH(
   req: Request,
-  context: { params: { id: string } }
+  context: { params: { [key: string]: string } }
 ): Promise<Response> {
   await connectDB();
 
   const [auth, errorResponse] = await verifyAuth(req, ["customer", "admin"]);
   if (errorResponse) return errorResponse;
 
-  const { id } = context.params; // ✅ strongly typed string
+  // ✅ safely narrow params.id
+  const id = Array.isArray(context.params.id)
+    ? context.params.id[0]
+    : context.params.id;
 
   const booking = await Booking.findById(id).populate("resource");
   if (!booking) {
