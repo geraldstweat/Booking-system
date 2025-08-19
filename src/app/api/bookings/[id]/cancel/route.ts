@@ -32,7 +32,6 @@ export async function PATCH(req: NextRequest, context: unknown): Promise<Respons
     }
   }
 
-  booking.status = "canceled";
   await booking.save();
 
   return NextResponse.json({ message: "Booking canceled", booking });
