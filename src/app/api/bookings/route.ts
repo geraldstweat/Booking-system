@@ -7,23 +7,21 @@ import { NextRequest } from "next/server";
 
 // GET: fetch bookings (admin → all, customer → own by email from token/session)
 export async function GET(req: NextRequest) {
+  // await connectDB();
   const { searchParams } = new URL(req.url);
   const role = searchParams.get("role"); // string | null
   const email = searchParams.get("email"); // string | null
   const user = email ? await User.findOne({ email }) : null;
-  const status = searchParams.get("status");
-  const query: Record<string, unknown> = { status };
-
+  if (!user) {
+    return new Response(JSON.stringify({ message: "User not found" }), {
+      status: 404,
+    });
+  }
   let bookings;
-  if (status) {
-    query.status = status;
-    bookings = await Booking.find(query);
+  if (role === "admin") {
+    bookings = await Booking.find().populate("resource");
   } else {
-    if (role === "admin") {
-      bookings = await Booking.find().populate("resource");
-    } else {
-      bookings = await Booking.find({ user: user._id }).populate("resource");
-    }
+    bookings = await Booking.find({ user: user._id }).populate("resource");
   }
   return Response.json(bookings);
 }
