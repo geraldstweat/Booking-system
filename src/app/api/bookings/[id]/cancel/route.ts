@@ -7,13 +7,12 @@ export async function PATCH(req: NextRequest, context: unknown) {
   await connectDB();
   const auth = await verifyAuth(req, ["customer", "admin"]);
 
-  if ("status" in auth) {
-    return NextResponse.json(
-      { message: "Unauthorized" },
-      { status: auth.status }
-    );
-  }
-
+if ("error" in auth) {
+  return NextResponse.json(
+    { message: auth.error },
+    { status: auth.status }
+  );
+}
   // ✅ safely cast context
   const { id } = (context as { params: { id: string } }).params;
 
