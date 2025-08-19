@@ -13,7 +13,7 @@ export async function PATCH(
   if (errorResponse) return errorResponse;
 
   // ✅ safely cast
-  const { id } = params as { id: string }
+  const { id } = params as { id: string };
 
   const booking = await Booking.findById(id).populate("resource");
   if (!booking) {
