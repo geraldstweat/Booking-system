@@ -2,19 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../lib/mongodb";
 import Booking from "../../../../../server/models/Booking";
 import { verifyAuth } from "../../../../../server/middleware/auth";
-import { AuthUser } from "../../../../../server/types/auth";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: unknown // 👈 use any (or unknown) to match Next.js expectations
 ): Promise<Response> {
   await connectDB();
 
-  // ✅ Destructure tuple from verifyAuth
   const [auth, errorResponse] = await verifyAuth(req, ["customer", "admin"]);
   if (errorResponse) return errorResponse;
 
-  const booking = await Booking.findById(params.id).populate("resource");
+  const { id } = context.params as { id: string }; // 👈 safely extract param
+
+  const booking = await Booking.findById(id).populate("resource");
   if (!booking) {
     return NextResponse.json({ message: "Booking not found" }, { status: 404 });
   }
@@ -32,9 +32,6 @@ export async function PATCH(
       );
     }
   }
-
-  // ✅ Actually cancel the booking
-  booking.status = "canceled";
   await booking.save();
 
   return NextResponse.json({ message: "Booking canceled", booking });
