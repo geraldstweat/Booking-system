@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import User from "../../../../server/models/User";
-import { connectDB } from "../../../lib/mongodb";
-import { generateToken } from "../../../lib/jwt";  // ✅ import helper
+import User from "../../../server/models/User";
+import { connectDB } from "../../lib/mongodb";
+import { generateToken } from "../../lib/jwt";  // ✅ import helper
 
 export async function POST(req: Request) {
   try {
