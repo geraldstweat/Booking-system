@@ -1,6 +1,6 @@
 export type AuthUser = {
   id: string;
-  role: string;
+  role: "admin" | "customer"; // tighten up roles
 };
 
 export type AuthError = {

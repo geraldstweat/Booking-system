@@ -60,8 +60,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     // Type guard: check if it's an error
     if ("error" in decoded) {
-      const err = decoded as AuthError;
-      return NextResponse.json(err, { status: err.status });
+      return NextResponse.json(decoded, { status: decoded.status });
     }
 
     // ✅ Here, decoded is AuthUser
@@ -87,10 +86,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     const dbUser = await User.findOne({ email: userEmail });
     if (!dbUser) {
-      return NextResponse.json(
-        { message: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
     const booking = await Booking.create({
