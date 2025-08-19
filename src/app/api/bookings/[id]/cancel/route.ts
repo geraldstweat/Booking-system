@@ -1,3 +1,8 @@
+import { NextResponse } from "next/server";
+import { connectDB } from "../../../../lib/mongodb";
+import Booking from "../../../../../server/models/Booking";
+import { verifyAuth } from "../../../../../server/middleware/auth";
+
 export async function PATCH(
   req: Request,
   context: any // 👈 FIX: let Next.js handle the shape
