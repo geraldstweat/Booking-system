@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { AuthResult, AuthUser } from "@/types/auth";
+import { AuthResult, AuthUser } from "../types/auth";
 import jwt from "jsonwebtoken"; // if you're using JWT
 
 export async function verifyAuth(
