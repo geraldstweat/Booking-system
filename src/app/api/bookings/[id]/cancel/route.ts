@@ -12,7 +12,10 @@ export async function PATCH(
   const [auth, errorResponse] = await verifyAuth(req, ["customer", "admin"]);
   if (errorResponse) return errorResponse;
 
-  const id = context.params.id as string; // ✅ safely cast to string
+  // ✅ safely narrow params.id
+  const id = Array.isArray(context.params.id)
+    ? context.params.id[0]
+    : context.params.id;
 
   const booking = await Booking.findById(id).populate("resource");
   if (!booking) {
@@ -33,9 +36,7 @@ export async function PATCH(
     }
   }
 
-  // optional: update booking status
-  // booking.status = "canceled";
-
+  // booking.status = "canceled"; // mark canceled
   await booking.save();
 
   return NextResponse.json({ message: "Booking canceled", booking });
