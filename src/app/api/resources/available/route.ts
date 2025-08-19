@@ -3,16 +3,16 @@ import Resource from "../../../../server/models/Resource";
 import { connectDB } from "../../../lib/mongodb";
 import { verifyAuth } from "../../../../server/middleware/auth";
 
-export async function GET(req: Request) {
+export async function GET(req: Request): Promise<Response> {
   await connectDB();
 
-  const authResponse = await verifyAuth(req, ["customer", "admin"]);
+  const auth = await verifyAuth(req, ["customer", "admin"]);
 
-  // if not 200 → return directly
-  if (authResponse.status !== 200) return authResponse;
+  if ("error" in auth) {
+    return NextResponse.json({ message: auth.error }, { status: auth.status });
+  }
 
-  // ✅ extract user info from JSON
-  const { id, role } = await authResponse.json();
+  const { id, role } = auth; // ✅ safe now
 
   try {
     let resources = await Resource.find();
