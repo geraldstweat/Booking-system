@@ -3,19 +3,21 @@ import { connectDB } from "../../../../lib/mongodb";
 import Booking from "../../../../../server/models/Booking";
 import { verifyAuth } from "../../../../../server/middleware/auth";
 
+// 👇 Explicit type for context
+type Context = {
+  params: { id: string };
+};
+
 export async function PATCH(
   req: Request,
-  context: { params: { [key: string]: string } }
+  { params }: Context
 ): Promise<Response> {
   await connectDB();
 
   const [auth, errorResponse] = await verifyAuth(req, ["customer", "admin"]);
   if (errorResponse) return errorResponse;
 
-  // ✅ safely narrow params.id
-  const id = Array.isArray(context.params.id)
-    ? context.params.id[0]
-    : context.params.id;
+  const { id } = params; // ✅ now strongly typed
 
   const booking = await Booking.findById(id).populate("resource");
   if (!booking) {
@@ -36,7 +38,7 @@ export async function PATCH(
     }
   }
 
-  // booking.status = "canceled"; // mark canceled
+  // booking.status = "canceled";
   // await booking.save();
 
   return NextResponse.json({ message: "Booking canceled", booking });
