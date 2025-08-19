@@ -785,9 +785,16 @@ const Section: React.FC<{
   </motion.section>
 );
 
+type TabId = "create" | "manage" | "availability";
+
+interface UnderlineTabsProps {
+  activeTab: TabId;
+  setActiveTab: (tab: TabId) => void;
+}
+
 // ========= Tabs =========
-export function UnderlineTabs({ activeTab, setActiveTab }: any) {
-  const tabs = [
+export function UnderlineTabs({ activeTab, setActiveTab }: UnderlineTabsProps) {
+  const tabs: { id: TabId; label: string }[] = [
     { id: "create", label: "Booking Creation" },
     { id: "manage", label: "Booking Management" },
     { id: "availability", label: "Availability & Scheduling" },
@@ -1030,25 +1037,25 @@ export default function BookingSystem() {
   };
 
   // Admin: update status
-  const handleAdminUpdate = async (id: string, status: string) => {
-    try {
-      await fetch(`/api/bookings/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-        body: JSON.stringify({ status }),
-      });
-      setAllBookings((prev) =>
-        prev.map((b) => (b._id === id ? { ...b, status } : b))
-      );
-      setMessage("✅ Booking updated!");
-    } catch (err) {
-      console.error(err);
-      setMessage("❌ Failed to update booking.");
-    }
-  };
+  // const handleAdminUpdate = async (id: string, status: string) => {
+  //   try {
+  //     await fetch(`/api/bookings/${id}`, {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: token ? `Bearer ${token}` : "",
+  //       },
+  //       body: JSON.stringify({ status }),
+  //     });
+  //     setAllBookings((prev) =>
+  //       prev.map((b) => (b._id === id ? { ...b, status } : b))
+  //     );
+  //     setMessage("✅ Booking updated!");
+  //   } catch (err) {
+  //     console.error(err);
+  //     setMessage("❌ Failed to update booking.");
+  //   }
+  // };
 
   // Customer: cancel with 24h cutoff
   const handleCancel = async (id: string, start_time: string) => {

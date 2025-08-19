@@ -26,10 +26,10 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json(resources, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error fetching resources:", err);
     return NextResponse.json(
-      { message: "Failed to fetch resources", error: err.message },
+      { message: "Failed to fetch resources", error: err },
       { status: 500 }
     );
   }

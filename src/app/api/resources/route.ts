@@ -4,16 +4,16 @@ import { connectDB } from "../../lib/mongodb";
 import { verifyAuth } from "@/server/middleware/auth";
 
 // 👇 GET all resources
-export async function GET(req: Request) {
+export async function GET() {
   await connectDB();
 
   try {
     const resources = await Resource.find();
     return NextResponse.json(resources, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error fetching resources:", err);
     return NextResponse.json(
-      { message: "Failed to fetch resources", error: err.message },
+      { message: "Failed to fetch resources", error: err },
       { status: 500 }
     );
   }
@@ -60,10 +60,10 @@ export async function POST(req: Request) {
       },
       { status: 201 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error seeding resources:", err);
     return NextResponse.json(
-      { message: "Failed to seed resources", error: err.message },
+      { message: "Failed to seed resources", error: err },
       { status: 500 }
     );
   }

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useState, ReactNode } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 /** Simple theme toggle */
@@ -26,70 +26,8 @@ function ThemeToggle() {
   );
 }
 
-interface ACardProps {
-  title: ReactNode;
-  desc: ReactNode;
-  children?: ReactNode;
-  delay?: number;
-}
-
-function ACard({ title, desc, children, delay = 0 }: ACardProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay }}
-      className="group rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm hover:shadow-xl transition"
-    >
-      <div className="mb-2 text-lg font-semibold">{title}</div>
-      <p className="mb-4 text-neutral-600 dark:text-neutral-300">{desc}</p>
-      {children}
-    </motion.div>
-  );
-}
-
-interface CounterProps {
-  to?: number;
-  suffix?: string;
-}
-
-function Counter({ to = 1000, suffix = "" }: CounterProps) {
-  const [n, setN] = useState(0);
-  const duration = 900;
-
-  useEffect(() => {
-    let start: number | undefined;
-    const step = (ts: number) => {
-      if (start === undefined) start = ts;
-      const p = Math.min((ts - start) / duration, 1);
-      setN(Math.floor(p * to));
-      if (p < 1) requestAnimationFrame(step);
-    };
-    const raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [to]);
-
-  return (
-    <span className="tabular-nums font-bold">
-      {n.toLocaleString()} {suffix}
-    </span>
-  );
-}
-
 // -------------------- MAIN PAGE --------------------
 export default function Home() {
-  const gallery = useMemo(
-    () =>
-      [
-        { src: "/next.svg", alt: "Next.js" },
-        { src: "/vercel.svg", alt: "Vercel" },
-        { src: "/globe.svg", alt: "Globe" },
-        { src: "/window.svg", alt: "Window" },
-        { src: "/file.svg", alt: "File" },
-      ] as const,
-    []
-  );
 
   return (
     <main className="min-h-screen">

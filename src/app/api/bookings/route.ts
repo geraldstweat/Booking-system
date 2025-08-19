@@ -10,9 +10,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const role = searchParams.get("role"); // string | null
   const email = searchParams.get("email"); // string | null
-  const user = await User.findOne({ email: email });
+  const user = email ? await User.findOne({ email }) : null;
   const status = searchParams.get("status");
-  let query: any = {};
+  const query: Record<string, unknown> = { status };
 
   let bookings;
   if (status) {
