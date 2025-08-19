@@ -10,7 +10,11 @@ export async function PATCH(
 ) {
   await connectDB();
   const auth = await verifyAuth(req, ["customer", "admin"]);
-  if ("status" in auth) return auth;
+
+  // ❌ don't return raw object
+  if ("status" in auth) {
+    return NextResponse.json({ message: auth.error ?? "Unauthorized" }, { status: auth.status });
+  }
 
   const booking = await Booking.findById(context.params.id).populate("resource");
   if (!booking) {
