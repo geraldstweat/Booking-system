@@ -1,53 +1,33 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-export type AuthSuccess = {
+export type AuthUser = {
   id: string;
   role: "customer" | "admin";
 };
 
-export type AuthError = {
-  status: number;
-  error: string;
-};
-
-export type AuthResult = AuthSuccess | AuthError;
-
 export async function verifyAuth(
   req: NextRequest,
   allowedRoles: ("customer" | "admin")[]
-): Promise<AuthResult> {
+): Promise<[AuthUser | null, NextResponse | null]> {
   try {
-    // Grab the token (assuming "Authorization: Bearer <token>")
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return { status: 401, error: "Missing or invalid token" };
+      return [null, NextResponse.json({ message: "Missing or invalid token" }, { status: 401 })];
     }
 
     const token = authHeader.split(" ")[1];
-    if (!token) {
-      return { status: 401, error: "Token missing" };
-    }
-
-    // Verify the JWT
     const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      throw new Error("JWT_SECRET not set");
-    }
+    if (!secret) throw new Error("JWT_SECRET not set");
 
-    const decoded = jwt.verify(token, secret) as {
-      id: string;
-      role: "customer" | "admin";
-    };
+    const decoded = jwt.verify(token, secret) as { id: string; role: "customer" | "admin" };
 
-    // Check role
     if (!allowedRoles.includes(decoded.role)) {
-      return { status: 403, error: "Forbidden" };
+      return [null, NextResponse.json({ message: "Forbidden" }, { status: 403 })];
     }
 
-    // ✅ Success
-    return { id: decoded.id, role: decoded.role };
-  } catch (err) {
-    return { status: 401, error: "Unauthorized" };
+    return [{ id: decoded.id, role: decoded.role }, null];
+  } catch {
+    return [null, NextResponse.json({ message: "Unauthorized" }, { status: 401 })];
   }
 }

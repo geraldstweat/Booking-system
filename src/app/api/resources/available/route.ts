@@ -6,13 +6,10 @@ import { verifyAuth } from "../../../../server/middleware/auth";
 export async function GET(req: Request): Promise<Response> {
   await connectDB();
 
-  const auth = await verifyAuth(req, ["customer", "admin"]);
+  const [auth, errorResponse] = await verifyAuth(req, ["customer", "admin"]);
+  if (errorResponse) return errorResponse; // ✅ always Response
 
-  if ("error" in auth) {
-    return NextResponse.json({ message: auth.error }, { status: auth.status });
-  }
-
-  const { id, role } = auth; // ✅ safe now
+  const { id, role } = auth!; // safe now
 
   try {
     let resources = await Resource.find();
