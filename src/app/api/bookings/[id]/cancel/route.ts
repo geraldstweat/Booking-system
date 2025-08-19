@@ -3,16 +3,15 @@ import { connectDB } from "../../../../lib/mongodb";
 import Booking from "../../../../../server/models/Booking";
 import { verifyAuth } from "../../../../../server/middleware/auth";
 
-interface Context {
-  params: { id: string };
-}
-
-export async function PATCH(req: NextRequest, { params }: Context) {
+export async function PATCH(
+  req: NextRequest,
+  context: { params: { id: string } }
+) {
   await connectDB();
   const auth = await verifyAuth(req, ["customer", "admin"]);
   if ("status" in auth) return auth;
 
-  const booking = await Booking.findById(params.id).populate("resource");
+  const booking = await Booking.findById(context.params.id).populate("resource");
   if (!booking) {
     return NextResponse.json({ message: "Booking not found" }, { status: 404 });
   }
