@@ -1,31 +1,53 @@
-import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
 
-export async function verifyAuth(req: Request, allowedRoles: string[]) {
+export type AuthSuccess = {
+  id: string;
+  role: "customer" | "admin";
+};
+
+export type AuthError = {
+  status: number;
+  error: string;
+};
+
+export type AuthResult = AuthSuccess | AuthError;
+
+export async function verifyAuth(
+  req: NextRequest,
+  allowedRoles: ("customer" | "admin")[]
+): Promise<AuthResult> {
   try {
+    // Grab the token (assuming "Authorization: Bearer <token>")
     const authHeader = req.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (!authHeader?.startsWith("Bearer ")) {
+      return { status: 401, error: "Missing or invalid token" };
     }
 
     const token = authHeader.split(" ")[1];
-    if (!process.env.JWT_SECRET) {
-      return NextResponse.json({ message: "Server config error" }, { status: 500 });
+    if (!token) {
+      return { status: 401, error: "Token missing" };
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET) as {
+    // Verify the JWT
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error("JWT_SECRET not set");
+    }
+
+    const decoded = jwt.verify(token, secret) as {
       id: string;
-      role: string;
+      role: "customer" | "admin";
     };
 
-    // ✅ check role
+    // Check role
     if (!allowedRoles.includes(decoded.role)) {
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+      return { status: 403, error: "Forbidden" };
     }
 
-    // ✅ return decoded inside NextResponse
-    return NextResponse.json({ id: decoded.id, role: decoded.role }, { status: 200 });
+    // ✅ Success
+    return { id: decoded.id, role: decoded.role };
   } catch (err) {
-    return NextResponse.json({ message: "Invalid token" }, { status: 401 });
+    return { status: 401, error: "Unauthorized" };
   }
 }
