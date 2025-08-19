@@ -9,7 +9,7 @@ export async function PATCH(req: NextRequest, context: unknown) {
 
   if ("status" in auth) {
     return NextResponse.json(
-      { message: auth.error ?? "Unauthorized" },
+      { message: "Unauthorized" },
       { status: auth.status }
     );
   }
