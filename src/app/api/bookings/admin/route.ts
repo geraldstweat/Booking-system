@@ -51,7 +51,7 @@ import Resource from "../../../../server/models/Resource";
 import User from "../../../../server/models/User";
 import { connectDB } from "../../../lib/mongodb";
 import { verifyAuth } from "../../../../server/middleware/auth";
-import { AuthError, AuthUser } from "../../../../types/auth";
+import { AuthError, AuthUser } from "../../../../server/types/auth";
 
 export async function POST(req: NextRequest): Promise<Response> {
   try {
