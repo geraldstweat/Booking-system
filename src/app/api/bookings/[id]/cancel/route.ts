@@ -5,14 +5,14 @@ import { verifyAuth } from "../../../../../server/middleware/auth";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
-): Promise<Response> {
+  context: { params: { id: string } }
+): Promise<NextResponse> {
   await connectDB();
 
   const [auth, errorResponse] = await verifyAuth(req, ["customer", "admin"]);
   if (errorResponse) return errorResponse;
 
-  const { id } = params; // 👈 now strongly typed
+  const { id } = context.params; // ✅ works with Next.js typing
 
   const booking = await Booking.findById(id).populate("resource");
   if (!booking) {
