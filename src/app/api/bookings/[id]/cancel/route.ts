@@ -1,56 +1,9 @@
-// import { NextRequest, NextResponse } from "next/server";
-// import { connectDB } from "../../../../lib/mongodb";
-// import Booking from "../../../../../server/models/Booking";
-// import { verifyAuth } from "../../../../../server/middleware/auth";
-// import type { RouteHandlerContext } from "next/server";
-
-// export async function PATCH(
-//   req: NextRequest,
-//   context: RouteHandlerContext<{ id: string }>
-// ) {
-//   await connectDB();
-//   const auth = await verifyAuth(req, ["customer", "admin"]);
-
-//   // ❌ don't return raw object
-//   if ("status" in auth) {
-//     return NextResponse.json({ message: auth.error ?? "Unauthorized" }, { status: auth.status });
-//   }
-
-//   const booking = await Booking.findById(context.params.id).populate("resource");
-//   if (!booking) {
-//     return NextResponse.json({ message: "Booking not found" }, { status: 404 });
-//   }
-
-//   const now = new Date();
-
-//   if (auth.role === "customer") {
-//     const cutoff = new Date(
-//       booking.start_time.getTime() - 2 * 60 * 60 * 1000 // 2h before start
-//     );
-//     if (now > cutoff) {
-//       return NextResponse.json(
-//         { message: "Too late to cancel this booking" },
-//         { status: 400 }
-//       );
-//     }
-//   }
-
-//   booking.status = "canceled";
-//   await booking.save();
-
-//   return NextResponse.json({ message: "Booking canceled", booking });
-// }
-
-
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "../../../../lib/mongodb";
 import Booking from "../../../../../server/models/Booking";
 import { verifyAuth } from "../../../../../server/middleware/auth";
 
-export async function PUT(
-  req: NextRequest,
-  context: { params: { id: string } } // ✅ inline typing
-) {
+export async function PATCH(req: NextRequest, context: any) {
   await connectDB();
   const auth = await verifyAuth(req, ["customer", "admin"]);
 
@@ -61,12 +14,30 @@ export async function PUT(
     );
   }
 
-  const booking = await Booking.findById(context.params.id).populate("resource");
+  // ✅ cast context to add type-safety
+  const { id } = (context as { params: { id: string } }).params;
+
+  const booking = await Booking.findById(id).populate("resource");
   if (!booking) {
     return NextResponse.json({ message: "Booking not found" }, { status: 404 });
   }
 
-  // ... your update logic here ...
+  const now = new Date();
 
-  return NextResponse.json({ message: "Booking updated", booking });
+  if (auth.role === "customer") {
+    const cutoff = new Date(
+      booking.start_time.getTime() - 2 * 60 * 60 * 1000 // 2h before start
+    );
+    if (now > cutoff) {
+      return NextResponse.json(
+        { message: "Too late to cancel this booking" },
+        { status: 400 }
+      );
+    }
+  }
+
+  booking.status = "canceled";
+  await booking.save();
+
+  return NextResponse.json({ message: "Booking canceled", booking });
 }
