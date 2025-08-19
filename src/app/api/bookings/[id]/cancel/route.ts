@@ -5,14 +5,14 @@ import { verifyAuth } from "../../../../../server/middleware/auth";
 
 export async function PATCH(
   req: NextRequest,
-  context: unknown // 👈 use any (or unknown) to match Next.js expectations
+  { params }: { params: { id: string } }
 ): Promise<Response> {
   await connectDB();
 
   const [auth, errorResponse] = await verifyAuth(req, ["customer", "admin"]);
   if (errorResponse) return errorResponse;
 
-  const { id } = context.params as { id: string }; // 👈 safely extract param
+  const { id } = params; // 👈 now strongly typed
 
   const booking = await Booking.findById(id).populate("resource");
   if (!booking) {
@@ -32,6 +32,7 @@ export async function PATCH(
       );
     }
   }
+
   await booking.save();
 
   return NextResponse.json({ message: "Booking canceled", booking });
