@@ -5,17 +5,14 @@ import { verifyAuth } from "../../../../../server/middleware/auth";
 
 export async function PATCH(
   req: Request,
-  context: { params: Record<string, string | string[]> }
+  context: { params: { id: string } }
 ): Promise<Response> {
   await connectDB();
 
   const [auth, errorResponse] = await verifyAuth(req, ["customer", "admin"]);
   if (errorResponse) return errorResponse;
 
-  // ✅ safely narrow params.id
-  const id = Array.isArray(context.params.id)
-    ? context.params.id[0]
-    : context.params.id;
+  const { id } = context.params; // ✅ strongly typed string
 
   const booking = await Booking.findById(id).populate("resource");
   if (!booking) {
@@ -37,7 +34,7 @@ export async function PATCH(
   }
 
   // booking.status = "canceled"; // mark canceled
-  await booking.save();
+  // await booking.save();
 
   return NextResponse.json({ message: "Booking canceled", booking });
 }
