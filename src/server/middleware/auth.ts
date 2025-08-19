@@ -1,33 +1,28 @@
-import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-
-export type AuthUser = {
-  id: string;
-  role: "customer" | "admin";
-};
+import { NextRequest } from "next/server";
+import { AuthResult, AuthUser } from "@/types/auth";
+import jwt from "jsonwebtoken"; // if you're using JWT
 
 export async function verifyAuth(
   req: NextRequest,
-  allowedRoles: ("customer" | "admin")[]
-): Promise<[AuthUser | null, NextResponse | null]> {
+  allowedRoles: string[]
+): Promise<AuthResult> {
   try {
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return [null, NextResponse.json({ message: "Missing or invalid token" }, { status: 401 })];
+      return { error: "Missing or invalid token", status: 401 };
     }
 
-    const token = authHeader.split(" ")[1];
-    const secret = process.env.JWT_SECRET;
-    if (!secret) throw new Error("JWT_SECRET not set");
+    const token = authHeader.replace("Bearer ", "");
 
-    const decoded = jwt.verify(token, secret) as { id: string; role: "customer" | "admin" };
+    // 🔑 Example decode (replace with your real logic)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as AuthUser;
 
     if (!allowedRoles.includes(decoded.role)) {
-      return [null, NextResponse.json({ message: "Forbidden" }, { status: 403 })];
+      return { error: "Forbidden", status: 403 };
     }
 
-    return [{ id: decoded.id, role: decoded.role }, null];
-  } catch {
-    return [null, NextResponse.json({ message: "Unauthorized" }, { status: 401 })];
+    return decoded;
+  } catch (err) {
+    return { error: "Unauthorized", status: 401 };
   }
 }

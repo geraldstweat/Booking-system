@@ -58,12 +58,12 @@ export async function POST(req: NextRequest): Promise<Response> {
     await connectDB();
     const decoded = await verifyAuth(req, ["admin"]);
 
-    // Type guard: check if it's an error
     if ("error" in decoded) {
       return NextResponse.json(decoded, { status: decoded.status });
     }
 
     // ✅ Here, decoded is AuthUser
+    console.log("Authed user:", decoded.id, decoded.role);
     const user = decoded as AuthUser;
 
     const reqdata = await req.json();
