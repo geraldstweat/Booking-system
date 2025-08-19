@@ -22,7 +22,7 @@ export async function GET(req: Request): Promise<Response> {
         { name: "Projector Service", type: "service", duration: 60, slots: [] },
         { name: "Catering Service", type: "service", duration: 120, slots: [] },
       ];
-      resources = await Resource.insertMany(defaultResources);
+      resources = await Resource.create(defaultResources);
     }
 
     return NextResponse.json(resources, { status: 200 });

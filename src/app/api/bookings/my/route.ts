@@ -3,6 +3,12 @@ import { connectDB } from "../../../lib/mongodb";
 import Booking from "../../../../server/models/Booking";
 import { verifyAuth } from "../../../../server/middleware/auth";
 
+export interface AuthUser {
+  id: string;
+  role: "customer" | "admin";
+  email: string;
+}
+
 export async function GET(req: NextRequest): Promise<Response> {
   try {
     await connectDB();
@@ -15,7 +21,15 @@ export async function GET(req: NextRequest): Promise<Response> {
     }
 
     // ✅ At this point, auth is AuthUser
-    const userId = (auth as AuthUser).id;
+    function isAuthUser(auth: any): auth is AuthUser {
+      return auth && typeof auth.id === "string";
+    }
+
+    // usage
+    let userId;
+    if (isAuthUser(auth)) {
+      userId = auth.id;
+    }
     const now = new Date();
 
     const bookings = await Booking.find({

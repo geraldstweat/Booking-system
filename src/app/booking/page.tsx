@@ -515,45 +515,6 @@ export default function BookingSystem() {
                 </form>
               </div>
             )}
-            {role === "admin" && (
-              <Section title="Pending Requests">
-                {requests.length > 0 ? (
-                  requests.map((req) => (
-                    <div
-                      key={req._id}
-                      className="p-4 bg-gray-700 rounded-xl mb-2"
-                    >
-                      <p>
-                        <b>User:</b> {req.userEmail}
-                      </p>
-                      <p>
-                        <b>Resource:</b> {req.resourceId}
-                      </p>
-                      <p>
-                        {req.start_time} → {req.end_time}
-                      </p>
-
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          onClick={() => handleApprove(req._id)}
-                          className="bg-green-600 px-3 py-1 rounded"
-                        >
-                          ✅ Accept
-                        </button>
-                        <button
-                          onClick={() => handleReject(req._id)}
-                          className="bg-red-600 px-3 py-1 rounded"
-                        >
-                          ❌ Reject
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-400">No pending requests</p>
-                )}
-              </Section>
-            )}
           </Section>
         )}
 
