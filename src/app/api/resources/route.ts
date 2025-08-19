@@ -1,69 +1,45 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import Resource from "../../../server/models/Resource";
 import { connectDB } from "../../lib/mongodb";
-import { verifyAuth } from "@/server/middleware/auth";
+import { verifyAuth } from "../../../server/middleware/auth";
 
-// 👇 GET all resources
-export async function GET() {
+export async function POST(req: NextRequest): Promise<Response> {
   await connectDB();
 
-  try {
-    const resources = await Resource.find();
-    return NextResponse.json(resources, { status: 200 });
-  } catch (err: unknown) {
-    console.error("Error fetching resources:", err);
-    return NextResponse.json(
-      { message: "Failed to fetch resources", error: err },
-      { status: 500 }
-    );
-  }
-}
-
-// 👇 Seed default resources (Admin only)
-export async function POST(req: Request) {
-  await connectDB();
-
-  const auth = await verifyAuth(req, ["admin"]);
-  if ("status" in auth) return auth;
+  const [auth, errorResponse] = await verifyAuth(req, ["admin"]);
+  if (errorResponse) return errorResponse; // ✅ always a Response
 
   try {
-    const defaultResources = [
-      { name: "Conference Room A", type: "room", capacity: 20, slots: [] },
-      { name: "Conference Room B", type: "room", capacity: 10, slots: [] },
-      { name: "Private Office", type: "room", capacity: 5, slots: [] },
-      { name: "Projector Service", type: "service", duration: 60, slots: [] },
-      { name: "Catering Service", type: "service", duration: 120, slots: [] },
-    ];
+    const body = await req.json();
+    const { resources } = body as { resources: any[] };
 
-    // Find existing resource names
-    const existing = await Resource.find({
-      name: { $in: defaultResources.map((r) => r.name) },
-    }).select("name");
+    if (!resources || !Array.isArray(resources)) {
+      return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
+    }
 
-    const existingNames = existing.map((r) => r.name);
+    // Insert, but avoid duplicates by name
+    const inserted: any[] = [];
+    const skipped: string[] = [];
 
-    // Filter out already existing resources
-    const toInsert = defaultResources.filter(
-      (r) => !existingNames.includes(r.name)
-    );
-
-    let inserted = [];
-    if (toInsert.length > 0) {
-      inserted = await Resource.insertMany(toInsert);
+    for (const resource of resources) {
+      const exists = await Resource.findOne({ name: resource.name });
+      if (exists) {
+        skipped.push(resource.name);
+      } else {
+        const newResource = new Resource(resource);
+        await newResource.save();
+        inserted.push(newResource);
+      }
     }
 
     return NextResponse.json(
-      {
-        message: "Resources seeding completed",
-        inserted,
-        skipped: existingNames,
-      },
+      { message: "Resources processed", inserted, skipped },
       { status: 201 }
     );
   } catch (err: unknown) {
-    console.error("Error seeding resources:", err);
+    console.error("Error creating resources:", err);
     return NextResponse.json(
-      { message: "Failed to seed resources", error: err },
+      { message: "Failed to create resources", error: String(err) },
       { status: 500 }
     );
   }
