@@ -6,11 +6,16 @@ import { verifyAuth } from "../../../../server/middleware/auth";
 export async function GET(req: NextRequest): Promise<Response> {
   try {
     await connectDB();
-    const auth = await verifyAuth(req, ["customer"]); // ✅ always safe
-    if ("status" in auth) {
-      return NextResponse.json(auth, { status: auth.status });
+    const auth = await verifyAuth(req, ["customer"]);
+
+    if (auth && typeof auth === "object" && "status" in auth) {
+      // Explicitly assert it's an error response
+      const err = auth as { status: number; error?: string; message?: string };
+      return NextResponse.json(err, { status: err.status });
     }
-    const userId = auth.id; // or auth.user._id depending on what you decode
+
+    // ✅ At this point, auth is AuthUser
+    const userId = (auth as AuthUser).id;
     const now = new Date();
 
     const bookings = await Booking.find({

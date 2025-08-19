@@ -22,7 +22,7 @@ export async function PATCH(
 
   const now = new Date();
 
-  if (auth.role === "customer") {
+  if (auth?.role === "customer") {
     const cutoff = new Date(
       booking.start_time.getTime() - 2 * 60 * 60 * 1000
     );

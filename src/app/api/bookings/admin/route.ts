@@ -44,27 +44,24 @@
 //     return res as NextResponse;
 //   }
 // }
-
 import { NextRequest, NextResponse } from "next/server";
 import Booking from "../../../../server/models/Booking";
 import Resource from "../../../../server/models/Resource";
 import User from "../../../../server/models/User";
 import { connectDB } from "../../../lib/mongodb";
 import { verifyAuth } from "../../../../server/middleware/auth";
-import { AuthError, AuthUser } from "../../../../server/types/auth";
+import { AuthUser } from "../../../../server/types/auth";
 
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     await connectDB();
-    const decoded = await verifyAuth(req, ["admin"]);
 
-    if ("error" in decoded) {
-      return NextResponse.json(decoded, { status: decoded.status });
-    }
+    // ✅ Correct tuple destructuring
+    const [user, errorResponse] = await verifyAuth(req, ["admin"]);
+    if (errorResponse) return errorResponse;
 
-    // ✅ Here, decoded is AuthUser
-    console.log("Authed user:", decoded.id, decoded.role);
-    const user = decoded as AuthUser;
+    // ✅ At this point, user is AuthUser
+    // console.log("Authed user:", user.id, user.role);
 
     const reqdata = await req.json();
     const { resourceId, start_time, end_time, userEmail } = reqdata;
