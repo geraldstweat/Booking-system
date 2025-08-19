@@ -23,18 +23,18 @@ export async function PATCH(req: NextRequest, context: unknown) {
   }
 
   const now = new Date();
-
-  if (auth.role === "customer") {
-    const cutoff = new Date(
-      booking.start_time.getTime() - 2 * 60 * 60 * 1000 // 2h before start
+  
+if (auth.role === "customer") {
+  const cutoff = new Date(
+    booking.start_time.getTime() - 2 * 60 * 60 * 1000
+  );
+  if (now > cutoff) {
+    return NextResponse.json(
+      { message: "Too late to cancel this booking" },
+      { status: 400 }
     );
-    if (now > cutoff) {
-      return NextResponse.json(
-        { message: "Too late to cancel this booking" },
-        { status: 400 }
-      );
-    }
   }
+}
 
   booking.status = "canceled";
   await booking.save();
