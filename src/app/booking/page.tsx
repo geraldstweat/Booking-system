@@ -88,21 +88,27 @@ export default function BookingSystem() {
   }, []);
 
   // Load resources
-  useEffect(() => {
-    const loadResources = async () => {
-      try {
-        const res = await fetch("/api/resources/available", {
-          headers: { Authorization: token ? `Bearer ${token}` : "" },
-        });
-        const data = (await res.json()) as Resource[];
-        setResources(data || []);
-      } catch (err) {
-        console.error(err);
+ useEffect(() => {
+  const loadResources = async () => {
+    try {
+      const res = await fetch("/api/resources/available", {
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setResources(data);
+      } else {
+        console.warn("Unexpected resources payload:", data);
+        setResources([]);
       }
-    };
+    } catch (err) {
+      console.error(err);
+      setResources([]); // fallback on error too
+    }
+  };
 
-    loadResources();
-  }, [token]);
+  if (token) loadResources();
+}, [token]);
 
   // Load bookings
   useEffect(() => {
