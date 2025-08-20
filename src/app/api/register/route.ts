@@ -3,9 +3,15 @@ import bcrypt from "bcryptjs";
 import User from "../../../server/models/User";
 import { connectDB } from "../../lib/mongodb";
 
+interface RegisterRequestBody {
+  email: string;
+  password: string;
+}
+
+
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json();
+    const { email, password } = (await req.json()) as RegisterRequestBody;
 
     if (!email || !password) {
       return NextResponse.json(

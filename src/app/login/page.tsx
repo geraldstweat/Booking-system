@@ -91,7 +91,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
-
+interface LoginResponse {
+  message: string;
+  data: {
+    id: string;
+    email: string;
+    role: string;
+    token: string;
+  };
+}
+interface ErrorResponse {
+  message: string;
+}
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -112,14 +123,14 @@ export default function LoginPage() {
     setLoading(false);
 
     if (res.ok) {
-      const rdata = await res.json();
+      const rdata: LoginResponse = await res.json();
       const data = rdata.data;
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
       localStorage.setItem("email", data.email);
       window.location.href = "/booking";
     } else {
-      const data = await res.json();
+      const data: ErrorResponse = await res.json();
       setError(data.message || "Login failed");
     }
   };

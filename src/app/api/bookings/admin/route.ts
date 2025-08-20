@@ -52,6 +52,12 @@ import { connectDB } from "../../../lib/mongodb";
 import { verifyAuth } from "../../../../server/middleware/auth";
 import { AuthUser } from "../../../../server/types/auth";
 
+interface BookingRequestBody {
+  resourceId: string;
+  start_time: string;
+  end_time: string;
+  userEmail: string;
+}
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     await connectDB();
@@ -60,15 +66,12 @@ export async function POST(req: NextRequest): Promise<Response> {
     const [user, errorResponse] = await verifyAuth(req, ["admin"]);
     if (errorResponse) return errorResponse;
 
-    // ✅ At this point, user is AuthUser
-    // console.log("Authed user:", user.id, user.role);
-
-    const reqdata = await req.json();
+    const reqdata = (await req.json()) as Partial<BookingRequestBody>;
     const { resourceId, start_time, end_time, userEmail } = reqdata;
 
     if (!resourceId || !userEmail) {
       return NextResponse.json(
-        { message: "Missing required fields" },
+        { error: "Missing required fields" },
         { status: 400 }
       );
     }

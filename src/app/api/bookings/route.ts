@@ -26,10 +26,17 @@ export async function GET(req: NextRequest) {
   return Response.json(bookings);
 }
 
+interface BookingRequestBody {
+  resourceId: string;
+  start_time: string;
+  end_time: string;
+}
+
 // POST: customer creates booking
 export async function POST(req: NextRequest) {
   await connectDB();
-  const { resourceId, start_time, end_time } = await req.json();
+   const body = (await req.json()) as BookingRequestBody;
+  const { resourceId, start_time, end_time } = body;
   const { searchParams } = new URL(req.url);
   const email = searchParams.get("email"); // string | null
   const resource = await Resource.findById(resourceId);

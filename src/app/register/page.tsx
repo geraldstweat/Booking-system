@@ -88,7 +88,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
-
+interface ErrorResponse {
+  message: string;
+}
 export default function RegisterPage() {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -116,8 +118,8 @@ export default function RegisterPage() {
       setEmail("");
       setPassword("");
     } else {
-      const data = await res.json();
-      setError(data.message || "Registration failed");
+      const data: ErrorResponse = await res.json();
+      setError(data.message || "Login failed");
     }
   };
 
@@ -164,8 +166,12 @@ export default function RegisterPage() {
         </div>
 
         {/* Feedback */}
-        {error && <p className="text-red-400 text-sm mb-3 text-center">{error}</p>}
-        {success && <p className="text-green-400 text-sm mb-3 text-center">{success}</p>}
+        {error && (
+          <p className="text-red-400 text-sm mb-3 text-center">{error}</p>
+        )}
+        {success && (
+          <p className="text-green-400 text-sm mb-3 text-center">{success}</p>
+        )}
 
         {/* Register Button */}
         <button

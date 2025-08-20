@@ -14,6 +14,7 @@ export async function PATCH(
 
   // ✅ safely cast
   const { id } = params as { id: string };
+  
 
   const booking = await Booking.findById(id).populate("resource");
   if (!booking) {

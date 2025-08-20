@@ -1,12 +1,22 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
-import User from "../../../server/models/User";
+import User, { IUser } from "../../../server/models/User";
 import { connectDB } from "../../lib/mongodb";
-import { generateToken } from "../../lib/jwt";  // ✅ import helper
+import { generateToken } from "../../lib/jwt";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    let body: { email?: string; password?: string } = {};
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { message: "Invalid or missing JSON body" },
+        { status: 400 }
+      );
+    }
+
+    const { email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -17,7 +27,8 @@ export async function POST(req: Request) {
 
     await connectDB();
 
-    const user = await User.findOne({ email });
+    // ✅ explicitly typed
+    const user = await User.findOne({ email }).lean<IUser>();
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
@@ -30,9 +41,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Generate JWT using utility
-    const token = generateToken(user._id.toString(), user.role);
-
+    // Generate JWT
+    const token = generateToken(String(user._id), user.role);
+    // Don’t return the password
     const data = {
       id: user._id,
       email: user.email,

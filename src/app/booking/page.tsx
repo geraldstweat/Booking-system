@@ -14,18 +14,27 @@ import {
 } from "lucide-react";
 
 // ========= Types =========
+// interface Booking {
+//   _id: string;
+//   resource: { _id?: string; name: string };
+//   start_time: string; // ISO
+//   end_time: string; // ISO
+//   user: { email: string };
+//   status: "confirmed" | "canceled" | string;
+// }
+
 interface Booking {
   _id: string;
-  resource: { _id?: string; name: string };
-  start_time: string; // ISO
-  end_time: string; // ISO
-  user: { email: string };
-  status: "confirmed" | "canceled" | string;
+  resourceId: string;
+  resource: string | Resource; // can be full object OR just an id
+  start_time: string;
+  end_time: string;
+  status: string;
+  userEmail: string;
 }
-
 interface AvailabilitySlot {
-  start_time: string; // ISO
-  end_time: string; // ISO
+  start_time: string;
+  end_time: string;
   booked: boolean;
 }
 
@@ -33,10 +42,8 @@ interface Resource {
   _id: string;
   name: string;
   description?: string;
-  slots?: string[]; // optional legacy
-  availability?: AvailabilitySlot[];
+  availability?: AvailabilitySlot[]; // <-- add this
 }
-
 // ========= UI Helpers =========
 const Section: React.FC<{
   title: React.ReactNode;
@@ -67,17 +74,6 @@ export default function BookingSystem() {
   const [token, setToken] = useState<string | null>(null);
   const [role, setRole] = useState<"customer" | "admin" | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [requests, setRequests] = useState<Booking[]>([]);
-  useEffect(() => {
-    const fetchRequests = async () => {
-      const res = await fetch("/api/bookings?status=pending");
-      if (res.ok) {
-        const data = await res.json();
-        setRequests(data);
-      }
-    };
-    fetchRequests();
-  }, []);
   // Timezone note (purely for display)
   const tz = useMemo(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -98,7 +94,7 @@ export default function BookingSystem() {
         const res = await fetch("/api/resources/available", {
           headers: { Authorization: token ? `Bearer ${token}` : "" },
         });
-        const data = await res.json();
+        const data = (await res.json()) as Resource[];
         setResources(data || []);
       } catch (err) {
         console.error(err);
@@ -118,7 +114,7 @@ export default function BookingSystem() {
           `/api/bookings?role=${role || "customer"}&email=${email}`,
           { headers: { Authorization: token ? `Bearer ${token}` : "" } }
         );
-        const data = await res.json();
+        const data = (await res.json()) as Booking[]; // ✅ cast
         if (role === "admin") setAllBookings(data || []);
         else setMyBookings(data || []);
       } catch (err) {
@@ -169,12 +165,14 @@ export default function BookingSystem() {
           end_time: endISO,
         }),
       });
-      const data = await res.json();
-      if (res.ok) {
+      const data = (await res.json()) as Booking;
+      if (res.ok && "id" in data) {
         setMyBookings((prev) => [...prev, data]);
         setMessage("✅ Booking confirmed!");
       } else {
-        setMessage(`❌ ${data?.message || "Failed to create booking."}`);
+        setMessage(
+          `❌ ${"message" in data ? data.message : "Failed to create booking."}`
+        );
       }
     } catch (err) {
       console.error(err);
@@ -247,12 +245,14 @@ export default function BookingSystem() {
           userEmail,
         }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as Booking;
       if (res.ok) {
         setAllBookings((prev) => [...prev, data]);
         setMessage("✅ Booking created!");
       } else {
-        setMessage(`❌ ${data?.message || "Failed to create booking."}`);
+        setMessage(
+          `❌ ${"message" in data ? data.message : "Failed to create booking."}`
+        );
       }
     } catch (err) {
       console.error(err);
@@ -535,7 +535,11 @@ export default function BookingSystem() {
                     className="p-5 bg-gray-800/60 rounded-xl shadow border border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                   >
                     <div>
-                      <p className="font-semibold">{b.resource.name}</p>
+                      <p className="font-semibold">
+                        {typeof b.resource === "string"
+                          ? "Unknown Resource"
+                          : b.resource?.name || "Unknown Resource"}
+                      </p>
                       <p className="text-sm text-gray-400">
                         {new Date(b.start_time).toLocaleString()} →{" "}
                         {new Date(b.end_time).toLocaleString()}
@@ -566,7 +570,11 @@ export default function BookingSystem() {
                       className="p-5 bg-gray-800/60 rounded-xl shadow border border-gray-700 flex items-center justify-between gap-3"
                     >
                       <div>
-                        <p className="font-semibold">{b.resource.name}</p>
+                        <p className="font-semibold">
+                          {typeof b.resource === "string"
+                            ? "Unknown Resource"
+                            : b.resource?.name}
+                        </p>
                         <p className="text-sm text-gray-400">
                           {start.toLocaleString()} →{" "}
                           {new Date(b.end_time).toLocaleString()}
